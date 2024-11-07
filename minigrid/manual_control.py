@@ -9,7 +9,9 @@ from gymnasium import Env
 from minigrid.core.actions import Actions
 from minigrid.minigrid_env import MiniGridEnv
 from minigrid.wrappers import ImgObsWrapper, RGBImgPartialObsWrapper
+import minigrid
 
+minigrid.register_minigrid_envs()
 
 class ManualControl:
     def __init__(
@@ -20,6 +22,7 @@ class ManualControl:
         self.env = env
         self.seed = seed
         self.closed = False
+        self.step_count = 0
 
     def start(self):
         """Start the window display with blocking event loop"""
@@ -35,8 +38,10 @@ class ManualControl:
                     self.key_handler(event)
 
     def step(self, action: Actions):
-        _, reward, terminated, truncated, _ = self.env.step(action)
-        print(f"step={self.env.step_count}, reward={reward:.2f}")
+        obs, reward, terminated, truncated, _ = self.env.step(action)
+        print(f"step={self.step_count}, reward={reward:.2f}")
+        agent_pos = self.env.unwrapped.agent_pos
+        print(f"agent pos={agent_pos}")
 
         if terminated:
             print("terminated!")
@@ -46,6 +51,8 @@ class ManualControl:
             self.reset(self.seed)
         else:
             self.env.render()
+
+        self.step_count += 1
 
     def reset(self, seed=None):
         self.env.reset(seed=seed)

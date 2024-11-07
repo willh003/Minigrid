@@ -399,11 +399,12 @@ class FullyObsWrapper(ObservationWrapper):
 
     def __init__(self, env):
         super().__init__(env)
+        env = self.unwrapped
 
         new_image_space = spaces.Box(
             low=0,
             high=255,
-            shape=(self.env.width, self.env.height, 3),  # number of cells
+            shape=(env.width, env.height, 3),  # number of cells
             dtype="uint8",
         )
 
@@ -849,18 +850,19 @@ class NoDeath(Wrapper):
     def step(self, action):
         # In Dynamic-Obstacles, obstacles move after the agent moves,
         # so we need to check for collision before self.env.step()
-        front_cell = self.grid.get(*self.front_pos)
+        env = self.unwrapped
+        front_cell = env.grid.get(*env.front_pos)
         going_to_death = (
-            action == self.actions.forward
+            action == env.actions.forward
             and front_cell is not None
             and front_cell.type in self.no_death_types
         )
 
-        obs, reward, terminated, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
 
         # We also check if the agent stays in death cells (e.g., lava)
         # without moving
-        current_cell = self.grid.get(*self.agent_pos)
+        current_cell = env.grid.get(*env.agent_pos)
         in_death = current_cell is not None and current_cell.type in self.no_death_types
 
         if terminated and (going_to_death or in_death):
